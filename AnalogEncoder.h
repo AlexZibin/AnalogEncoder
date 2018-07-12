@@ -8,14 +8,25 @@ class AnalogEncoder {
         AnalogEncoder (uint8_t pinL, uint8_t pinR, uint8_t bufferSize = 40, uint16_t samplingRate_ms = 10);
         int32_t read (); // Insert this function in loop(). Here runs the main integrating & comparison staff
         inline void write (int32_t p) {position = p;};
-        bool registerPattern (Fifo *pattern, CallBackFunction func); // Pattern format: Direction (+1/-1) / delayMs / Direction / delayMs / ...
+        bool registerPattern (Fifo *_pattern, CallBackFunction func); // Pattern format: Direction (+1/-1) / delayMs / Direction / delayMs / ...
 
     private:
         Fifo *bufferL;
         Fifo *bufferR;
+        Fifo *pattern;
         Timer timer;
         int32_t position;
         MOVEMENT_STATE movementState;
+        
+        int8_t movementPhase; /*
+        Phases of movement from L to R:
+        Phase   pinL    pinR
+          0       1       1
+          1       0       1
+          2       0       0
+          3       1       0
+          4       1       1
+        */
 }
 
 
@@ -27,6 +38,7 @@ AnalogEncoder::AnalogEncoder (uint8_t pinL, uint8_t pinR, uint8_t bufferSize, ui
 
     bufferL = new Fifo (bufferSize);
     bufferR = new Fifo (bufferSize);
+    pattern = nullptr;
     
     timer.setInterval (samplingRate_ms);
     timer.switchOn ();
@@ -57,13 +69,30 @@ int32_t AnalogEncoder::read () { // Here runs the main integrating & comparison 
         logln (++count);
         log (F("bufferL->average: ")); logln (aL);
         log (F("bufferR->average: ")); logln (aR);
+
+        switch (movementState) {
+            case MOVEMENT_STATE::NONE:
+                if (aR/aL >= triggerRatio) { // Left = dark, Right = bright; Movement L->R
+                    movementState = MOVEMENT_STATE::RIGHT;
+                    movementPhase = 1;
+                    ++position;
+                }
+                break;
+            case MOVEMENT_STATE::RIGHT:
+                movementState = MOVEMENT_STATE::LEFT;
+                position -= positionIncrement;
+                logln (F("LEFT start"));
+                break;
+        }
         
+ /*       
         if (aR/aL >= triggerRatio) { // Left = dark, Right = bright; Movement L->R
             switch (movementState) {
                 case MOVEMENT_STATE::NONE:
                 case MOVEMENT_STATE::LEFT:
                     movementState = MOVEMENT_STATE::RIGHT;
                     position += positionIncrement;
+                    logln (F("RIGHT start"));
                     break;
             }
         } else if (aL/aR >= triggerRatio) { // Movement R->L
@@ -72,11 +101,20 @@ int32_t AnalogEncoder::read () { // Here runs the main integrating & comparison 
                 case MOVEMENT_STATE::RIGHT:
                     movementState = MOVEMENT_STATE::LEFT;
                     position -= positionIncrement;
+                    logln (F("LEFT start"));
                     break;
             }
         } else { // Left = Right; NO Movement
-            
+            switch (movementState) {
+                case MOVEMENT_STATE::LEFT:
+                case MOVEMENT_STATE::RIGHT:
+                    logln (F("NONE start"));
+                    break;
+            }
+            movementState = MOVEMENT_STATE::NONE;
         }
+*/
+        
         log (F("position: ")); logln (position);
     }
     return position;
