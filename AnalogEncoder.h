@@ -45,6 +45,7 @@ AnalogEncoder::AnalogEncoder (uint8_t pinL, uint8_t pinR, uint8_t bufferSize, ui
     
     position = 0;
     movementState = MOVEMENT_STATE::NONE;
+    movementPhase = 0;
 }
 
 int32_t AnalogEncoder::read () { // Here runs the main integrating & comparison staff
@@ -76,12 +77,18 @@ int32_t AnalogEncoder::read () { // Here runs the main integrating & comparison 
                     movementState = MOVEMENT_STATE::RIGHT;
                     movementPhase = 1;
                     ++position;
+                } else if (aL/aR >= triggerRatio) { // Movement R->L
+                    movementState = MOVEMENT_STATE::LEFT;
+                    movementPhase = 1;
+                    --position;
                 }
                 break;
             case MOVEMENT_STATE::RIGHT:
-                movementState = MOVEMENT_STATE::LEFT;
-                position -= positionIncrement;
-                logln (F("LEFT start"));
+                switch (movementPhase) {
+                    case 1:
+                        как узнать, что оба - одинаковые, но тёмные?
+                        break;
+                }
                 break;
         }
         
