@@ -71,7 +71,7 @@ AnalogEncoder::AnalogEncoder (uint8_t?? pins_arduino_h? pinL, uint8_t pinR, uint
 int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs the main integrating & comparison staff
     //const int positionIncrement = 4;
     const int triggerRatio = 2;
-    //static bool negative;
+    int refValue;
     
     #define DEBUG
     #ifdef DEBUG
@@ -84,30 +84,31 @@ int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs th
     #endif
     
     if (timer.needToTrigger ()) {
-        //refValue = static_cast <int16_t> ((aL + aR) / 2.0);
-
-        buffer3->insert ((bufferL->out () + bufferR->out ()) / 2);
+        if (movementState == MOVEMENT_STATE::NONE) {
+            buffer3->insert ((bufferL->out () + bufferR->out ()) / 2);
+            refValue = buffer3->average ();
+        }
         
         bufferL->insert (analogRead (pinL));
         bufferR->insert (analogRead (pinR));
         
         int aL = bufferL->average ();
         int aR = bufferR->average ();
-        int b3avg = buffer3->average ();
+
         logln (++count);
         log (F("bufferL->average: ")); logln (aL);
         log (F("bufferR->average: ")); logln (aR);
-        log (F("buffer3->average: ")); logln (b3avg);
+        log (F("buffer3->average: ")); logln (refValue);
         
         if (buffer3->full ()) {
             switch (movementState) {
                 case MOVEMENT_STATE::NONE:
                     if (aR/aL >= triggerRatio) { // Left is darker than Right
-                        if (b3avg/aL >= triggerRatio) { // Left is going down; Right is stable, i.e. SHADOW moves from L to R
+                        if (refValue/aL >= triggerRatio) { // Left is going down; Right is stable, i.e. SHADOW moves from L to R
                             movementState = MOVEMENT_STATE::RIGHT;
                             movementPhase = 1;
                             ++position;
-                        } else if (aR/b3avg >= triggerRatio) { // Right is going up; Left is stable, i.e. LIGHT moves from R to L
+                        } else if (aR/refValue >= triggerRatio) { // Right is going up; Left is stable, i.e. LIGHT moves from R to L
                             movementState = MOVEMENT_STATE::LEFT;
                             movementPhase = 5;
                             --position;
