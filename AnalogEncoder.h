@@ -20,21 +20,22 @@ class AnalogEncoder {
         
         int8_t movementPhase; /*
                movementPhase:
-        Phases of movement from Left to Right:              Phases of movement from Right to Left:
-        1) Controlling with shadow: (refValue == 1)
-        Phase |  pinL    pinR                               Phase |  pinL    pinR
-          0   |    1       1 == refValue                      0   |    1       1 == refValue
-          1   |    0       1                                  1   |    1       0
-          2   |    0       0                                  2   |    0       0
-          3   |    1       0                                  3   |    0       1
-          4=0 |    1       1                                  4=0 |    1       1
-        2) Controlling with light: (refValue == 0)
-        Phase |  pinL    pinR                               Phase |  pinL    pinR
-          0   |    0       0 == refValue                      0   |    0       0 == refValue
-          1   |    1       0                                  1   |    0       1
-          2   |    1       1                                  2   |    1       1
-          3   |    0       1                                  3   |    1       0
-          4=0 |    0       0                                  4=0 |    0       0
+        4 phases of movement from Left to Right:        |    4 phases of movement from Right to Left:
+        ("0" represents low analog value, "1" represents high)
+        1) Controlling with shadow: (refValue == 1)     |
+        Phase |  pinL    pinR                           |    Phase |  pinL    pinR
+          0   |    1       1 == refValue                |      0   |    1       1 == refValue
+          1   |    0       1                            |      1   |    1       0
+          2   |    0       0                            |      2   |    0       0
+          3   |    1       0                            |      3   |    0       1
+          4=0 |    1       1                            |      4=0 |    1       1
+        2) Controlling with light: (refValue == 0) (negative == true)
+        Phase |  pinL    pinR                           |    Phase |  pinL    pinR
+          0   |    0       0 == refValue                |      0   |    0       0 == refValue
+          1   |    1       0                            |      1   |    0       1
+          2   |    1       1                            |      2   |    1       1
+          3   |    0       1                            |      3   |    1       0
+          4=0 |    0       0                            |      4=0 |    0       0
         */
 }
 
@@ -57,10 +58,11 @@ AnalogEncoder::AnalogEncoder (uint8_t?? pins_arduino_h? pinL, uint8_t pinR, uint
     movementPhase = 0;
 }
 
-int32_t AnalogEncoder::read () { // Here runs the main integrating & comparison staff
+int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs the main integrating & comparison staff
     //const int positionIncrement = 4;
     const float triggerRatio = 2.0;
-    static uint16_t refValue;
+    static int16_t refValue = 0; // 0 == "not initialized", working values 0..1024 
+    static bool negative;
     
     #define DEBUG
     #ifdef DEBUG
@@ -85,16 +87,20 @@ int32_t AnalogEncoder::read () { // Here runs the main integrating & comparison 
         if (bufferL->full ()) {
             switch (movementState) {
                 case MOVEMENT_STATE::NONE:
-                    if (aR/aL >= triggerRatio) { // Left = dark, Right = bright; Movement L->R
-                        movementState = MOVEMENT_STATE::RIGHT;
-                        movementPhase = 1;
-                        ++position;
+                    if (aR/aL >= triggerRatio) { // Left = dark, Right = bright; 
+                        if (refValue) { // statistics are collected already
+                            if (aR/aL >= triggerRatio) {
+                            // Movement L->R
+                            movementState = MOVEMENT_STATE::RIGHT;
+                            movementPhase = 1;
+                            ++position;
+                        }
                     } else if (aL/aR >= triggerRatio) { // Movement R->L
                         movementState = MOVEMENT_STATE::LEFT;
                         movementPhase = 1;
                         --position;
                     } else {
-                        refValue = static_cast <int> ((aL + aR) / 2.0);
+                        refValue = static_cast <int16_t> ((aL + aR) / 2.0);
                     break;
                 case MOVEMENT_STATE::RIGHT:
                     switch (movementPhase) {
