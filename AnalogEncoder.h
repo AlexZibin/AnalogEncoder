@@ -22,14 +22,14 @@ class AnalogEncoder {
                movementPhase:
         4 phases of movement from Left to Right:        |    4 phases of movement from Right to Left:
         ("0" represents low analog value, "1" represents high)
-        1) Controlling with shadow: (refValue == 1)     |
+        1) Controlling with shadow: (refValue == 0.5)   |
         Phase |  pinL    pinR                           |    Phase |  pinL    pinR
           0   |    1       1 == refValue                |      0   |    1       1 == refValue
           1   |    0       1                            |      1   |    1       0
           2   |    0       0                            |      2   |    0       0
           3   |    1       0                            |      3   |    0       1
           4=0 |    1       1                            |      4=0 |    1       1
-        2) Controlling with light: (refValue == 0) (negative == true)
+        2) Controlling with light: (refValue == 1.5) (negative == true)
         Phase |  pinL    pinR                           |    Phase |  pinL    pinR
           0   |    0       0 == refValue                |      0   |    0       0 == refValue
           1   |    1       0                            |      1   |    0       1
