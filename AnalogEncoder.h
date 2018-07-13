@@ -8,7 +8,7 @@ class AnalogEncoder {
         AnalogEncoder (uint8_t pinL, uint8_t pinR, uint8_t bufferSize = 40, uint16_t samplingRate_ms = 10);
         int32_t read (); // Insert this function in loop(). Here runs the main integrating & comparison staff
         inline void write (int32_t p) {position = p;};
-        bool registerPattern (Fifo *_pattern, CallBackFunction func); // Pattern format: Direction (+1/-1) / delayMs / Direction / delayMs / ...
+        bool registerPattern (Fifo *_pattern, CallBackFunction func); // Pattern format: {Reserved=0, Direction (+1/-1), delayMs[, Direction, delayMs, ...]}
 
     private:
         Fifo *bufferL;
@@ -24,18 +24,23 @@ class AnalogEncoder {
         ("0" represents low analog value, "1" represents high)
         1) Controlling with shadow: (refValue == 0.5)   |
         Phase |  pinL    pinR                           |    Phase |  pinL    pinR
-          0   |    1       1 == refValue                |      0   |    1       1 == refValue
+          0   |    1       1                            |      0   |    1       1 
           1   |    0       1                            |      1   |    1       0
           2   |    0       0                            |      2   |    0       0
           3   |    1       0                            |      3   |    0       1
           4=0 |    1       1                            |      4=0 |    1       1
+              refValue-pinL > 0                                 refValue-pinL < 0
+              refValue-pinR < 0                                 refValue-pinR > 0
+              
         2) Controlling with light: (refValue == 1.5) (negative == true)
         Phase |  pinL    pinR                           |    Phase |  pinL    pinR
-          0   |    0       0 == refValue                |      0   |    0       0 == refValue
+          0   |    0       0                            |      0   |    0       0 == refValue
           1   |    1       0                            |      1   |    0       1
           2   |    1       1                            |      2   |    1       1
           3   |    0       1                            |      3   |    1       0
           4=0 |    0       0                            |      4=0 |    0       0
+              refValue-pinL < 0
+              refValue-pinR > 0
         */
 }
 
