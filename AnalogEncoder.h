@@ -19,20 +19,29 @@ class AnalogEncoder {
         MOVEMENT_STATE movementState;
         
         int8_t movementPhase; /*
+        
         Phases of movement from L to R:
+        1) Controlling with shadow: (refValue == 0)
         Phase   pinL    pinR
           0       1       1
           1       0       1
           2       0       0
           3       1       0
           4       1       1
+        2) Controlling with light: (refValue == 1)
+        Phase   pinL    pinR
+          0       0       0
+          1       1       0
+          2       1       1
+          3       0       1
+          4       0       0
         */
 }
 
 
 ////////  AnalogEncoder.cpp:
 
-AnalogEncoder::AnalogEncoder (uint8_t pinL, uint8_t pinR, uint8_t bufferSize, uint16_t samplingRate_ms) {
+AnalogEncoder::AnalogEncoder (uint8_t?? pins_arduino_h? pinL, uint8_t pinR, uint8_t bufferSize, uint16_t samplingRate_ms) {
     pinMode (pinL, INPUT);
     pinMode (pinR, INPUT);
 
@@ -49,8 +58,10 @@ AnalogEncoder::AnalogEncoder (uint8_t pinL, uint8_t pinR, uint8_t bufferSize, ui
 }
 
 int32_t AnalogEncoder::read () { // Here runs the main integrating & comparison staff
-    const int positionIncrement = 4;
+    //const int positionIncrement = 4;
     const float triggerRatio = 2.0;
+    static uint16_t refValue;
+    
     #define DEBUG
     #ifdef DEBUG
         static long count = 0;
@@ -70,28 +81,31 @@ int32_t AnalogEncoder::read () { // Here runs the main integrating & comparison 
         logln (++count);
         log (F("bufferL->average: ")); logln (aL);
         log (F("bufferR->average: ")); logln (aR);
-
-        switch (movementState) {
-            case MOVEMENT_STATE::NONE:
-                if (aR/aL >= triggerRatio) { // Left = dark, Right = bright; Movement L->R
-                    movementState = MOVEMENT_STATE::RIGHT;
-                    movementPhase = 1;
-                    ++position;
-                } else if (aL/aR >= triggerRatio) { // Movement R->L
-                    movementState = MOVEMENT_STATE::LEFT;
-                    movementPhase = 1;
-                    --position;
-                }
-                break;
-            case MOVEMENT_STATE::RIGHT:
-                switch (movementPhase) {
-                    case 1:
-                        как узнать, что оба - одинаковые, но тёмные?
-                        break;
-                }
-                break;
-        }
         
+        if (bufferL->full ()) {
+            switch (movementState) {
+                case MOVEMENT_STATE::NONE:
+                    if (aR/aL >= triggerRatio) { // Left = dark, Right = bright; Movement L->R
+                        movementState = MOVEMENT_STATE::RIGHT;
+                        movementPhase = 1;
+                        ++position;
+                    } else if (aL/aR >= triggerRatio) { // Movement R->L
+                        movementState = MOVEMENT_STATE::LEFT;
+                        movementPhase = 1;
+                        --position;
+                    } else {
+                        refValue = static_cast <int> ((aL + aR) / 2.0);
+                    break;
+                case MOVEMENT_STATE::RIGHT:
+                    switch (movementPhase) {
+                        case 1:
+                            как узнать, что оба - одинаковые, но тёмные?
+                            break;
+                    }
+                    break;
+            } // end switch (movementState) 
+        } // end if (bufferL->full ())
+            
  /*       
         if (aR/aL >= triggerRatio) { // Left = dark, Right = bright; Movement L->R
             switch (movementState) {
