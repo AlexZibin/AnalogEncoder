@@ -13,6 +13,7 @@ class AnalogEncoder {
     private:
         Fifo *bufferL;
         Fifo *bufferR;
+        Fifo *buffer3;
         Fifo *pattern;
         Timer timer;
         int32_t position;
@@ -53,6 +54,7 @@ AnalogEncoder::AnalogEncoder (uint8_t?? pins_arduino_h? pinL, uint8_t pinR, uint
 
     bufferL = new Fifo (bufferSize);
     bufferR = new Fifo (bufferSize);
+    buffer3 = new Fifo (bufferSize);
     pattern = nullptr;
     
     timer.setInterval (samplingRate_ms);
@@ -66,8 +68,8 @@ AnalogEncoder::AnalogEncoder (uint8_t?? pins_arduino_h? pinL, uint8_t pinR, uint
 int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs the main integrating & comparison staff
     //const int positionIncrement = 4;
     const float triggerRatio = 2.0;
-    static int16_t refValue = 0; // 0 == "not initialized", working values 0..1024 
-    static bool negative;
+    int16_t refValue; 
+    //static bool negative;
     
     #define DEBUG
     #ifdef DEBUG
@@ -80,6 +82,8 @@ int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs th
     #endif
     
     if (timer.needToTrigger ()) {
+        //refValue = static_cast <int16_t> ((aL + aR) / 2.0);
+
         bufferL->insert (analogRead (pinL));
         bufferR->insert (analogRead (pinR));
         
@@ -105,7 +109,7 @@ int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs th
                         movementPhase = 1;
                         --position;
                     } else {
-                        refValue = static_cast <int16_t> ((aL + aR) / 2.0);
+                    }
                     break;
                 case MOVEMENT_STATE::RIGHT:
                     switch (movementPhase) {
