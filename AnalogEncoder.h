@@ -19,22 +19,22 @@ class AnalogEncoder {
         MOVEMENT_STATE movementState;
         
         int8_t movementPhase; /*
-        
-        Phases of movement from L to R:
-        1) Controlling with shadow: (refValue == 0)
-        Phase   pinL    pinR
-          0       1       1
-          1       0       1
-          2       0       0
-          3       1       0
-          4       1       1
-        2) Controlling with light: (refValue == 1)
-        Phase   pinL    pinR
-          0       0       0
-          1       1       0
-          2       1       1
-          3       0       1
-          4       0       0
+               movementPhase:
+        Phases of movement from Left to Right:              Phases of movement from Right to Left:
+        1) Controlling with shadow: (refValue == 1)
+        Phase |  pinL    pinR                               Phase |  pinL    pinR
+          0   |    1       1 == refValue                      0   |    1       1 == refValue
+          1   |    0       1                                  1   |    1       0
+          2   |    0       0                                  2   |    0       0
+          3   |    1       0                                  3   |    0       1
+          4=0 |    1       1                                  4=0 |    1       1
+        2) Controlling with light: (refValue == 0)
+        Phase |  pinL    pinR                               Phase |  pinL    pinR
+          0   |    0       0 == refValue                      0   |    0       0 == refValue
+          1   |    1       0                                  1   |    0       1
+          2   |    1       1                                  2   |    1       1
+          3   |    0       1                                  3   |    1       0
+          4=0 |    0       0                                  4=0 |    0       0
         */
 }
 
