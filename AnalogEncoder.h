@@ -51,7 +51,7 @@ class AnalogEncoder {
 ////////  AnalogEncoder.cpp:
 
 AnalogEncoder::AnalogEncoder (uint8_t?? pins_arduino_h? pinL, uint8_t pinR, 
-                              uint8_t bufferSize, uint16_t samplingRate_ms, int _triggerThreshold ) {
+                              uint8_t bufferSize, uint16_t samplingRate_ms, int _triggerThreshold) {
     pinMode (pinL, INPUT);
     pinMode (pinR, INPUT);
 
@@ -88,7 +88,7 @@ int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs th
     
     if (timer.needToTrigger ()) {
         if (movementState == MOVEMENT_STATE::NONE) {
-            buffer3->insert ((bufferL->out () + bufferR->out ()) / 2);
+            buffer3->insert ((bufferL->average () + bufferR->average ()) / 2);
             refValue = buffer3->average ();
         }
         
@@ -101,7 +101,7 @@ int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs th
         logln (++count);
         log (F("bufferL->average: ")); logln (aL);
         log (F("bufferR->average: ")); logln (aR);
-        log (F("buffer3->average: ")); logln (refValue);
+        log (F("\t buffer3->average: ")); logln (refValue);
         
         if (buffer3->full ()) {
             switch (movementState) {
@@ -121,8 +121,9 @@ int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs th
                 case MOVEMENT_STATE::RIGHT:
                     switch (movementPhase) {
                         case 1:
-                            if (abs (aR-levelToReachBySlave) * 5 >= triggerThreshold) {
+                            if (abs (aR-levelToReachBySlave) * 5 <= triggerThreshold) {
                                 ++movementPhase;
+                                ++position;
                                  ////\\\\
                                 ////  \\\\
                                 
