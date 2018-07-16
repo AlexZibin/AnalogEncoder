@@ -131,38 +131,8 @@ int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs th
                     }
                     break;
             } // end switch (movementState) 
-        } // end if (bufferL->full ())
+        } // end if (buffer3->full ())
             
- /*       
-        if (aR/aL >= triggerRatio) { // Left = dark, Right = bright; Movement L->R
-            switch (movementState) {
-                case MOVEMENT_STATE::NONE:
-                case MOVEMENT_STATE::LEFT:
-                    movementState = MOVEMENT_STATE::RIGHT;
-                    position += positionIncrement;
-                    logln (F("RIGHT start"));
-                    break;
-            }
-        } else if (aL/aR >= triggerRatio) { // Movement R->L
-            switch (movementState) {
-                case MOVEMENT_STATE::NONE:
-                case MOVEMENT_STATE::RIGHT:
-                    movementState = MOVEMENT_STATE::LEFT;
-                    position -= positionIncrement;
-                    logln (F("LEFT start"));
-                    break;
-            }
-        } else { // Left = Right; NO Movement
-            switch (movementState) {
-                case MOVEMENT_STATE::LEFT:
-                case MOVEMENT_STATE::RIGHT:
-                    logln (F("NONE start"));
-                    break;
-            }
-            movementState = MOVEMENT_STATE::NONE;
-        }
-*/
-        
         log (F("position: ")); logln (position);
     }
     return position;
