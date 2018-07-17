@@ -22,32 +22,10 @@ class AnalogEncoder {
         int triggerThreshold;
 
         volatile int8_t _oldState;
+        int8_t state;
         float coeffL, coeffR;
         
-        /*int8_t movementPhase; /*
-               movementPhase:
-        4 phases of movement from Left to Right:        |    4 phases of movement from Right to Left:
-        ("0" represents low analog value, "1" represents high)
-        1) Controlling with shadow: (buffer3->average == 1)   
-        Phase |  pinL    pinR                           |    Phase |  pinL    pinR
-          0   |    1       1                            |      0   |    1       1 
-          1   |    0       1                            |      1   |    1       0
-          2   |    0       0                            |      2   |    0       0
-          3   |    1       0                            |      3   |    0       1
-          4=0 |    1       1                            |      4=0 |    1       1
-              refValue-pinL ? 0                                 refValue-pinL 
-              refValue-pinR ? 0                                 refValue-pinR
-              
-        2) Controlling with light: (buffer3->average == 0) (negative == true)
-        Phase |  pinL    pinR                           |    Phase |  pinL    pinR
-          0   |    0       0                            |      0   |    0       0 
-          5   |    1       0                            |      5   |    0       1
-          6   |    1       1                            |      6   |    1       1
-          7   |    0       1                            |      7   |    1       0
-          8=0 |    0       0                            |      8=0 |    0       0
-              refValue-pinL 
-              refValue-pinR 
-        */
+        int8_t getState ();
 }
 
 
@@ -127,3 +105,6 @@ int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs th
     return position;
 }
 
+int8_t getState () {
+    
+}
