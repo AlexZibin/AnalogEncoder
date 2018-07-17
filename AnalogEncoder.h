@@ -104,7 +104,7 @@ int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs th
     }
     return position;
 }
-
+ 
 int8_t getState () {
     
 }
