@@ -23,7 +23,10 @@ class AnalogEncoder {
 
         volatile int8_t _oldState;
         int8_t state;
+    
+        int refValue, aL, aR;
         float coeffL, coeffR;
+        bool triggerByShadow;
         
         int8_t getState ();
 }
@@ -63,9 +66,6 @@ const int8_t knobdir[] = {
 };
 
 int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs the main integrating & comparison staff
-    static int refValue;
-    static int levelToReachBySlave;
-    
     #define DEBUG
     #ifdef DEBUG
         static long count = 0;
@@ -79,14 +79,13 @@ int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs th
     if (timer.needToTrigger ()) {
         if (_oldState == 0) {
             buffer3->insert ((bufferL->average () + bufferR->average ()) / 2);
-            refValue = buffer3->average ();
         }
         
         bufferL->insert (analogRead (pinL));
         bufferR->insert (analogRead (pinR));
         
-        int aL = bufferL->average ();
-        int aR = bufferR->average ();
+        aL = bufferL->average ();
+        aR = bufferR->average ();
 
         logln (++count);
         log (F("bufferL->average: ")); logln (aL);
@@ -95,9 +94,12 @@ int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs th
         
         if (buffer3->full ()) {
             if (_oldState == 0) {
-                coeffL = buffer3->average / bufferL->average;
-                coeffR = buffer3->average / bufferR->average;
+                refValue = buffer3->average ();
+                coeffL = refValue / bufferL->average;
+                coeffR = refValue / bufferR->average;
             } // end if (_oldState == 0)
+            
+            state = getState ();
         } // end if (buffer3->full ())
             
         log (F("position: ")); logln (position);
@@ -106,5 +108,15 @@ int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs th
 }
  
 int8_t getState () {
-    
+    /*
+    aL *= coeffL;
+    aR *= coeffR;
+    log (F("*= coeffL bufferL->average: ")); logln (aL);
+    log (F("*= coeffR bufferR->average: ")); logln (aR);
+    */
+
+    if (abs (aR - aL) >= triggerThreshold) {
+        
+        triggerByShadow
+    }
 }
