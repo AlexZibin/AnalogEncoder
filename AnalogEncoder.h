@@ -1,7 +1,9 @@
 #include "fifo.h"
 #include "timer.h"
 
-enum class MOVEMENT_STATE {NONE, LEFT, RIGHT};
+// Idea and parts of code from https://github.com/mathertel/RotaryEncoder/blob/master/RotaryEncoder.cpp
+
+//enum class MOVEMENT_STATE {NONE, LEFT, RIGHT};
 
 class AnalogEncoder {
     public:
@@ -19,9 +21,10 @@ class AnalogEncoder {
         int32_t position;
         int triggerThreshold;
 
-        MOVEMENT_STATE movementState;
+        volatile int8_t _oldState;
+        float coeffL, coeffR;
         
-        int8_t movementPhase; /*
+        /*int8_t movementPhase; /*
                movementPhase:
         4 phases of movement from Left to Right:        |    4 phases of movement from Right to Left:
         ("0" represents low analog value, "1" represents high)
@@ -68,9 +71,18 @@ AnalogEncoder::AnalogEncoder (uint8_t?? pins_arduino_h? pinL, uint8_t pinR,
     
     position = 0;
     triggerThreshold = _triggerThreshold;
-    movementState = MOVEMENT_STATE::NONE;
-    movementPhase = 0;
+    _oldState = 0;
+    
+    //movementState = MOVEMENT_STATE::NONE;
+    //movementPhase = 0;
 }
+
+const int8_t knobdir[] = {
+  0, -1,  1,  0,
+  1,  0,  0, -1,
+ -1,  0,  0,  1,
+  0,  1, -1,  0
+};
 
 int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs the main integrating & comparison staff
     static int refValue;
@@ -87,7 +99,7 @@ int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs th
     #endif
     
     if (timer.needToTrigger ()) {
-        if (movementState == MOVEMENT_STATE::NONE) {
+        if (_oldState == 0) {
             buffer3->insert ((bufferL->average () + bufferR->average ()) / 2);
             refValue = buffer3->average ();
         }
@@ -104,37 +116,14 @@ int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs th
         log (F("\t buffer3->average: ")); logln (refValue);
         
         if (buffer3->full ()) {
-            switch (movementState) {
-                case MOVEMENT_STATE::NONE:
-                    if (abs (refValue - aL) >= triggerThreshold) { // moves from L to R; aL=master, aR=slave
-                        movementState = MOVEMENT_STATE::RIGHT;
-                        movementPhase = 1;
-                        levelToReachBySlave = aL;
-                        ++position;
-                    } else if (abs (refValue - aR) >= triggerThreshold) { // moves from R to L
-                        movementState = MOVEMENT_STATE::LEFT;
-                        movementPhase = 1;
-                        levelToReachBySlave = aR;
-                        --position;
-                    } 
-                    break;
-                case MOVEMENT_STATE::RIGHT:
-                    switch (movementPhase) {
-                        case 1:
-                            if (abs (aR-levelToReachBySlave) * 5 <= triggerThreshold) {
-                                ++movementPhase;
-                                ++position;
-                                 ////\\\\
-                                ////  \\\\
-                                
-                            }
-                            break;
-                    }
-                    break;
-            } // end switch (movementState) 
+            if (_oldState == 0) {
+                coeffL = buffer3->average / bufferL->average;
+                coeffR = buffer3->average / bufferR->average;
+            } // end if (_oldState == 0)
         } // end if (buffer3->full ())
             
         log (F("position: ")); logln (position);
     }
     return position;
 }
+
