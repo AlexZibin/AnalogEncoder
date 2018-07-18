@@ -8,7 +8,7 @@
 class AnalogEncoder {
     public:
         AnalogEncoder (uint8_t pinL, uint8_t pinR, uint8_t bufferSize = 10, uint16_t samplingRate_ms = 10, int _triggerThreshold = 50);
-        int32_t read (); // Insert this function in loop(). Here runs the main integrating & comparison staff
+        int32_t read (void); // Insert this function in loop(). Here runs the main integrating & comparison staff
         inline void write (int32_t p) {position = p;};
         bool registerPattern (Fifo *_pattern, CallBackFunction func); // Pattern format: {Reserved=0, Direction (+1/-1), delayMs[, Direction, delayMs, ...]}
 
@@ -28,7 +28,8 @@ class AnalogEncoder {
         float coeffL, coeffR;
         bool triggerByShadow;
         
-        int8_t getState ();
+        int8_t getState (void);
+        int8_t normalize (int8_t val);
 }
 
 
@@ -65,7 +66,7 @@ const int8_t knobdir[] = {
   0,  1, -1,  0
 };
 
-int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs the main integrating & comparison staff
+int32_t AnalogEncoder::read (void) { // Insert this function in loop(). Here runs the main integrating & comparison staff
     #define DEBUG
     #ifdef DEBUG
         static long count = 0;
@@ -107,18 +108,32 @@ int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs th
     return position;
 }
  
-int8_t getState () {
+int8_t AnalogEncoder::getState (void) {
     /*
     int aaL = aL*coeffL;
     int aaR = aR*coeffR;
     log (F("*= coeffL bufferL->average aaL: ")); logln (aaL);
     log (F("*= coeffR bufferR->average aaR: ")); logln (aaR);
     */
+    
+    return (normalize (aL) << 1) | normalize (aR);
+}
 
-    if (_oldState == 0) {
-        if (aR - refValue >= triggerThreshold) {
+int8_t AnalogEncoder::normalize (int8_t val) {
+    if (abs (val - refValue) <= triggerThreshold) 
+        return 0;
 
-            triggerByShadow
+    if (_oldState == 0) { // need to set triggerByShadow
+        if (val - refValue >= triggerThreshold) {
+            triggerByShadow = false;
+        } else if (refValue - val >= triggerThreshold) {
+            triggerByShadow = true;
         }
+        return 1;
+    } else if (triggerByShadow == false) {
+        if (val - refValue >= triggerThreshold) return 1;
+    } else {
+        if (refValue - val >= triggerThreshold) return 1;
     }
+    return 0;
 }
