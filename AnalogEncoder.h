@@ -95,8 +95,8 @@ int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs th
         if (buffer3->full ()) {
             if (_oldState == 0) {
                 refValue = buffer3->average ();
-                coeffL = refValue / bufferL->average;
-                coeffR = refValue / bufferR->average;
+                coeffL = refValue / aL;
+                coeffR = refValue / aR;
             } // end if (_oldState == 0)
             
             state = getState ();
@@ -109,14 +109,16 @@ int32_t AnalogEncoder::read () { // Insert this function in loop(). Here runs th
  
 int8_t getState () {
     /*
-    aL *= coeffL;
-    aR *= coeffR;
-    log (F("*= coeffL bufferL->average: ")); logln (aL);
-    log (F("*= coeffR bufferR->average: ")); logln (aR);
+    int aaL = aL*coeffL;
+    int aaR = aR*coeffR;
+    log (F("*= coeffL bufferL->average aaL: ")); logln (aaL);
+    log (F("*= coeffR bufferR->average aaR: ")); logln (aaR);
     */
 
-    if (abs (aR - aL) >= triggerThreshold) {
-        
-        triggerByShadow
+    if (_oldState == 0) {
+        if (aR - refValue >= triggerThreshold) {
+
+            triggerByShadow
+        }
     }
 }
