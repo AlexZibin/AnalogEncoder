@@ -102,13 +102,17 @@ int32_t AnalogEncoder::read (void) { // Insert this function in loop(). Here run
             
             state = getState ();
             if (_oldState != state) {
-                position += knobdir[state | (_oldState << 2)];
-                _oldState = state;
+                int32_t incPos = knobdir[state | (_oldState << 2)];
+                if (incPos) {
+                    _oldState = state;
+                    position += incPos;
+                }
+
+                log (F("\nstate: ")); logln (state);
+                log (F("_oldState: ")); logln (_oldState);
+                log (F("position: ")); logln (position);
             }
-            
         } // end if (buffer3->full ())
-            
-        log (F("position: ")); logln (position);
     }
     return position;
 }
@@ -153,6 +157,6 @@ int8_t AnalogEncoder::normalize (int8_t val) {
     if (analogEncoderPosition) {
         logln (++counter);
         log ("analogEncoderPosition: "); logln (analogEncoderPosition); 
-        analogEncoderPosition = 0;
+        //analogEncoderPosition = 0;
     }
 
