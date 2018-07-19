@@ -10,6 +10,7 @@ struct PatternCtlInfo {
 };
 
 PatternCtlInfo patternCtlInfo [] = {{0, nullptr, nullptr}, {0, nullptr, nullptr}, {0, nullptr, nullptr}};
+const int patternLen = len (patternCtlInfo) / len (patternCtlInfo []);
 
 class AnalogEncoder {
     public:
@@ -98,6 +99,7 @@ int32_t AnalogEncoder::read (void) { // Insert this function in loop(). Here run
         log (F("bufferL->average: ")); logln (aL);
         log (F("bufferR->average: ")); logln (aR);
         log (F("\t buffer3->average: ")); logln (refValue);
+        log (F("\t patternLen: ")); logln (patternLen);
         
         if (buffer3->full ()) {
             if (_oldState == 0) {
